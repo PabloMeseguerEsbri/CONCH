@@ -2,6 +2,7 @@ import argparse
 import os
 import random
 
+import h5py
 import numpy as np
 import torch
 from PIL import Image
