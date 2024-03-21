@@ -28,21 +28,24 @@ list_wsi.reverse() if args.reverse else None
 random.shuffle(list_wsi) if args.random else None
 
 for name_wsi in list_wsi:
-    file_npy = os.path.join(folder_save, name_wsi + ".npy")
-    if os.path.isfile(file_npy):
+    try:
+        file_npy = os.path.join(folder_save, name_wsi + ".npy")
+        if os.path.isfile(file_npy):
+            continue
+        print(name_wsi)
+
+        folder_wsi = os.path.join(folder_path, name_wsi)
+        images_list = os.listdir(folder_wsi)
+        images_list = [file for file in images_list if file.lower().endswith('.png')]
+        images = [Image.open(os.path.join(folder_wsi, patch)) for patch in tqdm(images_list) if os.path.isfile(os.path.join(folder_wsi, patch))]
+
+        patch_embeddings = []
+        for img in tqdm(images):
+            img =  preprocess(img).unsqueeze(dim=0).to(device)
+            with torch.inference_mode():
+                x = model.encode_image(img, proj_contrast=False, normalize=False).squeeze().cpu().numpy()
+            patch_embeddings.append(x)
+        patch_embeddings = np.stack(patch_embeddings)
+        np.save(file_npy, patch_embeddings)
+    except:
         continue
-    print(name_wsi)
-
-    folder_wsi = os.path.join(folder_path, name_wsi)
-    images_list = os.listdir(folder_wsi)
-    images_list = [file for file in images_list if file.lower().endswith('.png')]
-    images = [Image.open(os.path.join(folder_wsi, patch)) for patch in tqdm(images_list) if os.path.isfile(os.path.join(folder_wsi, patch))]
-
-    patch_embeddings = []
-    for img in tqdm(images):
-        img =  preprocess(img).unsqueeze(dim=0).to(device)
-        with torch.inference_mode():
-            x = model.encode_image(img, proj_contrast=False, normalize=False).squeeze().cpu().numpy()
-        patch_embeddings.append(x)
-    patch_embeddings = np.stack(patch_embeddings)
-    np.save(file_npy, patch_embeddings)
