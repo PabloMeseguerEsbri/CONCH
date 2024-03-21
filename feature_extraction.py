@@ -4,6 +4,7 @@ import random
 
 import h5py
 import numpy as np
+import pandas as pd
 import torch
 from PIL import Image
 from tqdm import tqdm
@@ -69,12 +70,12 @@ for name_wsi in list_wsi:
                 print("WSI does not have any patch")
                 continue
             if name_wsi.startswith("HCUV"):
-                folder_wsi = args.folder_png + "Images/"
+                folder_wsi = folder_path + "Images/"
             elif name_wsi.startswith("HUSC"):
-                folder_wsi = args.folder_png + "Images_Jose/"
+                folder_wsi = folder_path + "Images_Jose/"
             if img_files.size > 7500:
                 img_files = img_files[:7500]
-            images = [Image.open(folder_wsi + patch) for patch in tqdm(img_files) if os.path.isfile(folder_wsi + patch)]
+            images = [Image.open(folder_wsi + patch) for patch in tqdm(img_files[:10]) if os.path.isfile(folder_wsi + patch)]
 
         patch_embeddings = []
         for img in tqdm(images):
