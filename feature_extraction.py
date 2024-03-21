@@ -1,10 +1,13 @@
-from PIL import Image
-import torch
-from conch.open_clip_custom import create_model_from_pretrained
 import argparse
 import os
-from tqdm import tqdm
+import random
+
 import numpy as np
+import torch
+from PIL import Image
+from tqdm import tqdm
+
+from conch.open_clip_custom import create_model_from_pretrained
 
 parser = argparse.ArgumentParser(description="Feature extraction w/ UNI")
 parser.add_argument('--folder_path', type=str)
