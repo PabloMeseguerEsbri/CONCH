@@ -14,6 +14,7 @@ from conch.open_clip_custom import create_model_from_pretrained
 parser = argparse.ArgumentParser(description="Feature extraction w/ UNI")
 parser.add_argument('--folder_path', type=str)
 parser.add_argument('--folder_save', type=str)
+parser.add_argument('--model_path', type=str, default="checkpoints/conch/pytorch_model.bin")
 parser.add_argument('--reverse', action='store_true')
 parser.add_argument('--random', action='store_true')
 parser.add_argument('--data_loading', type=str, choices=["PATH", "CLAM", "AI4SKIN"])
@@ -24,7 +25,7 @@ folder_path = args.folder_path
 folder_save = args.folder_save
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model, preprocess = create_model_from_pretrained("conch_ViT-B-16", checkpoint_path="checkpoints/conch/pytorch_model.bin")
+model, preprocess = create_model_from_pretrained("conch_ViT-B-16", checkpoint_path=args.model_path)
 model.to(device)
 
 # Data loading
