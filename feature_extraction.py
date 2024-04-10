@@ -32,13 +32,13 @@ model.to(device)
 if args.data_loading == "CLAM":
     list_wsi = os.listdir(folder_path)
 elif args.data_loading == "PATH":
-    list_wsi = [item for item in os.listdir(folder_path) if os.path.isdir(os.path.join(folder_path, item))]
+    list_wsi = [item for item in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, item))]
 elif args.data_loading == "AI4SKIN":
     patches = pd.read_csv("./docs/csv/AI4SKIN_patches.csv")['images'].values
     list_wsi = pd.read_csv("./docs/csv/AI4SKIN_WSI.csv", delimiter=",")['WSI'].values
     patches_ids = np.array([patch[:9] for patch in patches])
 
-list_wsi = list_wsi[::-1] if args.reverse and args.data_loading == "AI4SKIN" else list_wsi.reverse() if args.reverse else list_wsi
+list_wsi = list_wsi[::-1] if args.reverse else list_wsi
 random.shuffle(list_wsi) if args.random else None
 
 for name_wsi in list_wsi:
