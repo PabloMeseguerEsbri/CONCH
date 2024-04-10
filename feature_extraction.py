@@ -24,10 +24,9 @@ folder_path = args.folder_path
 folder_save = args.folder_save
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model, preprocess = create_model_from_pretrained('conch_ViT-B-16', "hf_hub:MahmoodLab/conch", hf_auth_token="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")
+model, preprocess = create_model_from_pretrained("conch_ViT-B-16", checkpoint_path="checkpoints/conch/pytorch_model.bin")
 model.to(device)
 
-# Data loading
 # Data loading
 if args.data_loading == "CLAM":
     list_wsi = os.listdir(folder_path)
@@ -70,13 +69,14 @@ for name_wsi in list_wsi:
                 print("WSI does not have any patch")
                 continue
             if name_wsi.startswith("HCUV"):
-                folder_wsi = folder_path + "Images/"
+                folder_wsi = os.path.join(folder_path , "Images/")
             elif name_wsi.startswith("HUSC"):
-                folder_wsi = folder_path + "Images_Jose/"
+                folder_wsi = os.path.join(folder_path , "Images_Jose/")
             if img_files.size > 7500:
                 img_files = img_files[:7500]
-            images = [Image.open(folder_wsi + patch) for patch in tqdm(img_files[:10]) if os.path.isfile(folder_wsi + patch)]
+            images = [Image.open(folder_wsi + patch) for patch in tqdm(img_files) if os.path.isfile(os.path.join(folder_wsi, patch))]
 
+        # Feature extraction
         patch_embeddings = []
         for img in tqdm(images):
             img =  preprocess(img).unsqueeze(dim=0).to(device)
