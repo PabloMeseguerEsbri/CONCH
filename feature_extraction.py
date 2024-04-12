@@ -17,7 +17,7 @@ parser.add_argument('--folder_save', type=str)
 parser.add_argument('--model_path', type=str, default="checkpoints/conch/pytorch_model.bin")
 parser.add_argument('--reverse', action='store_true')
 parser.add_argument('--random', action='store_true')
-parser.add_argument('--data_loading', type=str, choices=["PATH", "CLAM", "AI4SKIN"])
+parser.add_argument('--data_loading', type=str, choices=["PATH", "CLAM", "AI4SKIN", "features"])
 parser.add_argument('--slicing', action='store_true')
 parser.add_argument('--slicing_shape', type=int, choices=[512,256])
 args = parser.parse_args()
@@ -29,7 +29,7 @@ model, preprocess = create_model_from_pretrained("conch_ViT-B-16", checkpoint_pa
 model.to(device)
 
 # Data loading
-if args.data_loading == "CLAM":
+if args.data_loading in ["CLAM", "features"]:
     list_wsi = os.listdir(folder_path)
 elif args.data_loading == "PATH":
     list_wsi = [item for item in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, item))]
@@ -45,6 +45,9 @@ for name_wsi in list_wsi:
     try:
         if args.data_loading == "CLAM":
             name_wsi = name_wsi[:-3]
+        if args.data_loading == "features":
+            name_wsi = name_wsi[:-4]
+
         file_npy = os.path.join(folder_save, name_wsi + ".npy")
         if os.path.isfile(file_npy):
             continue
@@ -78,13 +81,21 @@ for name_wsi in list_wsi:
             images = [Image.open(folder_wsi + patch) for patch in tqdm(img_files) if os.path.isfile(os.path.join(folder_wsi, patch))]
 
         # Feature extraction
-        patch_embeddings = []
-        for img in tqdm(images):
-            img =  preprocess(img).unsqueeze(dim=0).to(device)
-            with torch.inference_mode():
-                x = model.encode_image(img, proj_contrast=False, normalize=False).squeeze().cpu().numpy()
-            patch_embeddings.append(x)
-        patch_embeddings = np.stack(patch_embeddings)
-        np.save(file_npy, patch_embeddings)
+        if args.data_loading == "features":
+            patch_embeddings = np.load(os.path.join(folder_path, name_wsi + ".npy"))
+            patch_embeddings = torch.tensor(patch_embeddings).to(device)
+            patch_embeddings = torch.matmul(patch_embeddings, model.visual.proj_contrast)
+            patch_embeddings = torch.nn.functional.normalize(patch_embeddings,dim=1)
+            patch_embeddings = patch_embeddings.cpu().detach().numpy()
+            np.save(file_npy, patch_embeddings)
+        else:
+            patch_embeddings = []
+            for img in tqdm(images):
+                img =  preprocess(img).unsqueeze(dim=0).to(device)
+                with torch.inference_mode():
+                    x = model.encode_image(img, proj_contrast=False, normalize=False).squeeze().cpu().numpy()
+                patch_embeddings.append(x)
+            patch_embeddings = np.stack(patch_embeddings)
+            np.save(file_npy, patch_embeddings)
     except:
         continue
