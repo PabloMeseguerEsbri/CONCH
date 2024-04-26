@@ -1,0 +1,48 @@
+{
+    "0": {
+        "classnames": {
+            "CHRCC": [
+                "chromophobe RCC",
+                "chromophobe renal cell carcinoma",
+				"renal cell carcinoma, chromophobe type",
+                "renal cell carcinoma of the chromophobe type"
+            ],
+            "CCRCC": [
+			    "clear cell RCC",
+                "clear cell renal cell carcinoma",
+                "renal cell carcinoma, clear cell type",
+				"renal cell carcinoma of the clear cell type"
+            ],
+			"PRCC": [
+				"papillary RCC",
+                "papillary renal cell carcinoma",
+                "renal cell carcinoma, papillary type",
+                "renal cell carcinoma of the papillary type"
+            ]
+        },
+        "templates": [
+            "CLASSNAME.",
+            "a photomicrograph showing CLASSNAME.",
+            "a photomicrograph of CLASSNAME.",
+            "an image of CLASSNAME.",
+            "an image showing CLASSNAME.",
+            "an example of CLASSNAME.",
+            "CLASSNAME is shown.",
+            "this is CLASSNAME.",
+            "there is CLASSNAME.",
+            "a histopathological image showing CLASSNAME.",
+            "a histopathological image of CLASSNAME.",
+            "a histopathological photograph of CLASSNAME.",
+            "a histopathological photograph showing CLASSNAME.",
+            "shows CLASSNAME.",
+            "presence of CLASSNAME.",
+            "CLASSNAME is present.",
+            "an H&E stained image of CLASSNAME.",
+            "an H&E stained image showing CLASSNAME.",
+            "an H&E image showing CLASSNAME.",
+            "an H&E image of CLASSNAME.",
+            "CLASSNAME, H&E stain.",
+            "CLASSNAME, H&E."
+        ]
+    }
+}
