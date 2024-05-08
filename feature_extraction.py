@@ -8,10 +8,9 @@ import pandas as pd
 import torch
 from PIL import Image
 from tqdm import tqdm
-
 from conch.open_clip_custom import create_model_from_pretrained
 
-parser = argparse.ArgumentParser(description="Feature extraction w/ UNI")
+parser = argparse.ArgumentParser(description="Feature extraction w/ CONCH")
 parser.add_argument('--folder_path', type=str)
 parser.add_argument('--folder_save', type=str)
 parser.add_argument('--model_path', type=str, default="checkpoints/conch/pytorch_model.bin")
@@ -42,60 +41,57 @@ list_wsi = list_wsi[::-1] if args.reverse else list_wsi
 random.shuffle(list_wsi) if args.random else None
 
 for name_wsi in list_wsi:
-    try:
-        if args.data_loading == "CLAM":
-            name_wsi = name_wsi[:-3]
-        if args.data_loading == "features":
-            name_wsi = name_wsi[:-4]
+    if args.data_loading == "CLAM":
+        name_wsi = name_wsi[:-3]
+    if args.data_loading == "features":
+        name_wsi = name_wsi[:-4]
 
-        file_npy = os.path.join(folder_save, name_wsi + ".npy")
-        if os.path.isfile(file_npy):
-            continue
-        print(name_wsi)
-
-        if args.data_loading == "CLAM":
-            with h5py.File(os.path.join(folder_path, name_wsi + ".h5"), 'r') as file:
-                images = file['imgs'][:]
-                coords = file['coords'][:]
-            if args.slicing:
-                images, coords = slicing(size_out=args.slicing_shape, images=images, coords=coords)  # Slicing
-            images = [Image.fromarray(patch) for patch in images]
-
-        if args.data_loading == "PATH":
-            folder_wsi = os.path.join(folder_path, name_wsi)
-            images_list = os.listdir(folder_wsi)
-            images_list = [file for file in images_list if file.lower().endswith('.png')]
-            images = [Image.open(os.path.join(folder_wsi, patch)) for patch in tqdm(images_list) if os.path.isfile(os.path.join(folder_wsi, patch))]
-
-        if args.data_loading == "AI4SKIN":
-            img_files = patches[np.array(patches_ids) == name_wsi]  # All patches of one WSI
-            if img_files.size == 0:
-                print("WSI does not have any patch")
-                continue
-            if name_wsi.startswith("HCUV"):
-                folder_wsi = os.path.join(folder_path , "Images/")
-            elif name_wsi.startswith("HUSC"):
-                folder_wsi = os.path.join(folder_path , "Images_Jose/")
-            if img_files.size > 7500:
-                img_files = img_files[:7500]
-            images = [Image.open(folder_wsi + patch) for patch in tqdm(img_files) if os.path.isfile(os.path.join(folder_wsi, patch))]
-
-        # Feature extraction
-        if args.data_loading == "features":
-            patch_embeddings = np.load(os.path.join(folder_path, name_wsi + ".npy"))
-            patch_embeddings = torch.tensor(patch_embeddings).to(device)
-            patch_embeddings = torch.matmul(patch_embeddings, model.visual.proj_contrast)
-            patch_embeddings = torch.nn.functional.normalize(patch_embeddings,dim=1)
-            patch_embeddings = patch_embeddings.cpu().detach().numpy()
-            np.save(file_npy, patch_embeddings)
-        else:
-            patch_embeddings = []
-            for img in tqdm(images):
-                img =  preprocess(img).unsqueeze(dim=0).to(device)
-                with torch.inference_mode():
-                    x = model.encode_image(img, proj_contrast=False, normalize=False).squeeze().cpu().numpy()
-                patch_embeddings.append(x)
-            patch_embeddings = np.stack(patch_embeddings)
-            np.save(file_npy, patch_embeddings)
-    except:
+    file_npy = os.path.join(folder_save, name_wsi + ".npy")
+    if os.path.isfile(file_npy):
         continue
+    print(name_wsi)
+
+    if args.data_loading == "CLAM":
+        with h5py.File(os.path.join(folder_path, name_wsi + ".h5"), 'r') as file:
+            images = file['imgs'][:]
+            coords = file['coords'][:]
+        if args.slicing:
+            images, coords = slicing(size_out=args.slicing_shape, images=images, coords=coords)  # Slicing
+        images = [Image.fromarray(patch) for patch in images]
+
+    if args.data_loading == "PATH":
+        folder_wsi = os.path.join(folder_path, name_wsi)
+        images_list = os.listdir(folder_wsi)
+        images_list = [file for file in images_list if file.lower().endswith('.png')]
+        images = [Image.open(os.path.join(folder_wsi, patch)) for patch in tqdm(images_list) if os.path.isfile(os.path.join(folder_wsi, patch))]
+
+    if args.data_loading == "AI4SKIN":
+        img_files = patches[np.array(patches_ids) == name_wsi]  # All patches of one WSI
+        if img_files.size == 0:
+            print("WSI does not have any patch")
+            continue
+        if name_wsi.startswith("HCUV"):
+            folder_wsi = os.path.join(folder_path , "Images/")
+        elif name_wsi.startswith("HUSC"):
+            folder_wsi = os.path.join(folder_path , "Images_Jose/")
+        if img_files.size > 7500:
+            img_files = img_files[:7500]
+        images = [Image.open(folder_wsi + patch) for patch in tqdm(img_files) if os.path.isfile(os.path.join(folder_wsi, patch))]
+
+    # Feature extraction
+    if args.data_loading == "features":
+        patch_embeddings = np.load(os.path.join(folder_path, name_wsi + ".npy"))
+        patch_embeddings = torch.tensor(patch_embeddings).to(device)
+        patch_embeddings = torch.matmul(patch_embeddings, model.visual.proj_contrast)
+        patch_embeddings = torch.nn.functional.normalize(patch_embeddings,dim=1)
+        patch_embeddings = patch_embeddings.cpu().detach().numpy()
+        np.save(file_npy, patch_embeddings)
+    else:
+        patch_embeddings = []
+        for img in tqdm(images):
+            img =  preprocess(img).unsqueeze(dim=0).to(device)
+            with torch.inference_mode():
+                x = model.encode_image(img, proj_contrast=False, normalize=False).squeeze().cpu().numpy()
+            patch_embeddings.append(x)
+        patch_embeddings = np.stack(patch_embeddings)
+        np.save(file_npy, patch_embeddings)
