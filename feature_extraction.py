@@ -10,6 +10,14 @@ from PIL import Image
 from tqdm import tqdm
 from conch.open_clip_custom import create_model_from_pretrained
 
+def isWhitePatch_S(patch, rgbThresh=220, percentage=0.2):
+    num_pixels = patch.shape[0] * patch.shape[1]
+    return True if np.all(patch > rgbThresh, axis=2).sum() > num_pixels * percentage else False
+
+def isBlackPatch_S(patch, rgbThresh=20, percentage=0.05):
+    num_pixels = patch.shape[0] * patch.shape[1]
+    return True if np.all(np.array(patch) < rgbThresh, axis=2).sum() > num_pixels * percentage else False
+
 def slicing(images, coords, size_out):
     size_in = images.shape[1]
     resize_factor = int(size_in / size_out)
